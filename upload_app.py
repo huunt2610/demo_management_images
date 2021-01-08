@@ -2,6 +2,7 @@ import glob
 from flask import Flask, flash, request, redirect, render_template
 from config import *
 import upload_image
+import os
 
 app = Flask(__name__,
             static_url_path='',  # removes path prefix requirement */templates/static
@@ -22,6 +23,11 @@ def makedir(dest):
 makedir('')  # make uploads folder
 
 
+@app.route('/home')
+def home_form():
+    return render_template('home.html')
+
+
 # on page load display the upload file
 @app.route('/upload')
 def upload_form():
@@ -29,11 +35,15 @@ def upload_form():
     return render_template('upload.html')
 
 
+@app.route('/delete', methods=['POST', 'GET'])
+def delete_form():
+    return render_template('delete.html')
+
+
 # on a POST request of data
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if request.method == 'POST':
-
         emp_code = str(request.form['code'])
         emp_name = str(request.form['name'])
         id_file = str(request.form['id_file'])
@@ -54,12 +64,12 @@ def upload_file():
                     filename = "%s_%s.%s" % (emp_code, id_file, file.filename.split(".")[-1])
                 file.save(os.path.join(upload_dest, filename))
                 path = os.path.join(upload_dest, filename)
-                upload_image.extract_feature(path, id_file,emp_code)
+                upload_image.extract_feature(path, id_file, emp_code)
             else:
                 print('Not allowed', file)
 
         flash('File(s) uploaded')
-        return redirect('/upload')
+        return redirect('/home')
 
 
 # what have I updated? Return a list of updated files

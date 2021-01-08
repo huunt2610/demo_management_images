@@ -6,23 +6,15 @@
 
     <div id="drop-area">
 
-        <form class="my-form" action="/upload" enctype="multipart/form-data">
-            <input type="file" id="fileElem" multiple accept="file_extension">
+        <form class="my-form" action="/delete" enctype="multipart/form-data">
             <span> Employee Code: <input id='code' name="emp_code" type="text" /></span><br>
-            <span> Employee Name: <input id='name' name="emp_name" type="text" /></span>
+            <input class="button" type="submit" value="Remove" />
         </form>
-
-        <label class="button" for="fileElem">Add images</label>
         <form action="/home">
             <input class="button" type="submit" value="Back the home" />
         </form>
-        <br><br>
-
-        <progress id="progress-bar" max="100" value="0"></progress>
-        <div id="gallery"></div>
     </div>
 
-    <p id='status'></p>
 
 
 
