@@ -79,23 +79,35 @@ def extract_feature(doc, image_name, user_id):
         arr3 = selfie_x3.detach().numpy().tolist()
         arr0 = selfie_x0.detach().numpy().tolist()
         file_name = f'features_folder/{user_id}.json'
-        if os.path.exists(file_name):
-            print('2')
-            r = {image_name: [{1: arr1}, {2: arr2}, {3: arr3}, {0: arr0}]}
-            r = json.dumps(r)
-            json_data = json.loads(r)
-            with open(file_name) as json_file:
-                data = json.load(json_file)
-                data.append(json_data)
-            write_json(data, filename=file_name)
-        else:
-            r = [{image_name: [{1: arr1}, {2: arr2}, {3: arr3}, {0: arr0}]}]
-            r = json.dumps(r)
-            json_data = json.loads(r)
-            with open(file_name, 'w', encoding='utf-8') as f:
-                json.dump(json_data, f, ensure_ascii=False, indent=4)
+        r = {image_name: [{1: arr1}, {2: arr2}, {3: arr3}, {0: arr0}]}
+        r = json.dumps(r)
+        json_data = json.loads(r)
+        with open(file_name, 'w', encoding='utf-8') as f:
+            json.dump(json_data, f, ensure_ascii=False, indent=4)
+        # if os.path.exists(file_name):
+        #     print('2')
+        #     r = {image_name: [{1: arr1}, {2: arr2}, {3: arr3}, {0: arr0}]}
+        #     r = json.dumps(r)
+        #     json_data = json.loads(r)
+        #     with open(file_name) as json_file:
+        #         data = json.load(json_file)
+        #         data.append(json_data)
+        #     write_json(data, filename=file_name)
+        # else:
+        #     r = [{image_name: [{1: arr1}, {2: arr2}, {3: arr3}, {0: arr0}]}]
+        #     r = json.dumps(r)
+        #     json_data = json.loads(r)
+        #     with open(file_name, 'w', encoding='utf-8') as f:
+        #         json.dump(json_data, f, ensure_ascii=False, indent=4)
 
-# path = '/Users/bao.tran/Downloads/ticket12_111213/0325119677683606_prod.KYCServiceNATIONAL_ID1763785liveness_1.JPEG'
-# name = 'clinton'
-# id = 'U001'
-# extract_feature(path, name, id)
+
+import datetime
+s = datetime.datetime.now()
+print(s)
+path = '/Users/huu.nguyen/Documents/SmartPay/Temp/crawling_google_images_2/1.jpg'
+name = 'clinton'
+id = 'U001'
+extract_feature(path, name, id)
+e = datetime.datetime.now()
+print(e)
+print(e-s)
