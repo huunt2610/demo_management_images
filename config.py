@@ -12,3 +12,5 @@ upload_dest = os.path.join(os.getcwd(), 'uploads_folder')
 extensions = set(['txt', 'pdf', 'image/png', 'image/jpg', 'image/tiff','image/gtiff', 'image/jpeg'])
 #text/html 
 db_loc = os.path.join(os.getcwd(), 'user_cred.db')
+# full path destination for extracted feature
+feature_storage = os.path.join(os.getcwd(), "features_folder")
