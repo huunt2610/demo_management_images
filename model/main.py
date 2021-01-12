@@ -26,7 +26,7 @@ import numpy as np
 
 
 detector = dlib.get_frontal_face_detector()
-predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
+predictor = dlib.shape_predictor("/Users/bao.tran/Downloads/3/shape_predictor_68_face_landmarks.dat")
 fa = FaceAligner(predictor, desiredFaceWidth=256)
 mtcnn = MTCNN()
 
@@ -77,7 +77,7 @@ def face_alignment(input_file, output_face_file, is_selfie):
 
 def compare_face(doc, selfie, threshold=0.4):
     v_img_root = "dataset"
-    v_model_file = "facematch_svm_epoch_15_0.9575792247416961_2020_01_31_12_57_53.pth"
+    v_model_file = "/Users/bao.tran/Downloads/3/facematch_svm_epoch_15_0.9575792247416961_2020_01_31_12_57_53.pth"
 
     params = {'lr': 0.001,
               'momentum': 0.9,
@@ -146,24 +146,12 @@ def compare_face(doc, selfie, threshold=0.4):
 
     model = clsMultiScalePairNetsSVM(basenet_selfie, basenet_doc)  # clsMultiScaleNet(basenet)
 
-    # criterion = torch.nn.MarginRankingLoss(margin = 0.1)
-    # criterion = torch.nn.MSELoss(reduction='mean')
     optimizer = optim.SGD(model.parameters(), lr=params['lr'], momentum=params['momentum'],
                           weight_decay=params['weight_decay'])
-    # optimizer = optim.Adam(model.parameters(), lr=params['lr'] )
-    # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5, verbose=True, factor=0.1)
-
     checkpoint = torch.load(v_model_file, map_location=torch.device('cpu'))
 
     model.load_state_dict(checkpoint['state_dict'])
-    # optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     model.eval()
-
-    # result_eval = []
-    # total_acc, size = 0, 0
-
-    # print(type(valid))
-
     for batch_idx, batch_X in enumerate(data_loader_valid):
         doc_set = batch_X['doc']
         selfie_set = batch_X['selfie']
@@ -178,7 +166,6 @@ def compare_face(doc, selfie, threshold=0.4):
             doc_x1, doc_x2, doc_x3, doc_x0 = Variable(doc_x1), Variable(doc_x2), Variable(doc_x3), Variable(doc_x0)
             selfie_x1, selfie_x2, selfie_x3, selfie_x0 = Variable(selfie_x1), Variable(selfie_x2), Variable(
                 selfie_x3), Variable(selfie_x0)
-            print(doc_x1)
             output, dict_dist = model(doc_x1, doc_x2, doc_x3, doc_x0, selfie_x1, selfie_x2, selfie_x3, selfie_x0)
 
         output = output.detach().cpu().numpy().squeeze()
