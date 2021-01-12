@@ -3,6 +3,7 @@ from facenet_utils import clsMultiScaleDataLoaderCustom
 from torchvision import transforms as tfs
 from torch.utils.data import DataLoader
 from config import *
+from model import main
 
 
 def saveFeatures(p_data_loader, p_id, tensor_feature):
@@ -96,3 +97,8 @@ def extract_feature(doc, id_file, user_id, tensor_feature):
     data_loader_valid = DataLoader(valid, batch_size=params['batch_size'], shuffle=params['shuffle'],
                                    num_workers=params['num_workers'], pin_memory=True, )
     saveFeatures(data_loader_valid, user_id + '_' + id_file, tensor_feature)
+
+tensor_features = loadFeatures()
+from datetime import datetime
+now = datetime.now()
+print(main.compare_face(selfie='/Users/bao.tran/Downloads/3/Image99.png', tensor_feature=tensor_features))

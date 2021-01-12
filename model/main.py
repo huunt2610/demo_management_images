@@ -75,7 +75,7 @@ def face_alignment(input_file, output_face_file, is_selfie):
     return bResult
 
 
-def compare_face(doc, selfie, tensor_feature,threshold=0.4):
+def compare_face(selfie, tensor_feature, threshold=0.4):
     v_img_root = "dataset"
     v_model_file = "/Users/bao.tran/Downloads/3/facematch_svm_epoch_15_0.9575792247416961_2020_01_31_12_57_53.pth"
 
@@ -129,7 +129,7 @@ def compare_face(doc, selfie, tensor_feature,threshold=0.4):
 
     # 1.2 define dataset
 
-    valid = clsMultiScaleDataLoaderCustom(selfie, doc, img_root=v_img_root, transform=transform_valid)
+    valid = clsMultiScaleDataLoaderCustom(selfie, img_root=v_img_root, transform=transform_valid)
 
     # 1.3 define data load
 
@@ -153,23 +153,24 @@ def compare_face(doc, selfie, tensor_feature,threshold=0.4):
     model.load_state_dict(checkpoint['state_dict'])
     model.eval()
     for batch_idx, batch_X in enumerate(data_loader_valid):
-        doc_set = batch_X['doc']
+        # doc_set = batch_X['doc']
         selfie_set = batch_X['selfie']
 
-        doc_x1, doc_x2, doc_x3, doc_x0 = doc_set['x1'], doc_set['x2'], doc_set['x3'], doc_set['x0']
-        selfie_x1, selfie_x2, selfie_x3, selfie_x0 = selfie_set['x1'], selfie_set['x2'], selfie_set['x3'], \
+        # doc_x1, doc_x2, doc_x3, doc_x0 = doc_set['x1'], doc_set['x2'], doc_set['x3'], doc_set['x0']
+        selfie_x1, selfie_x2, selfie_x3, selfie_x0 = selfie_set['x0'], selfie_set['x1'], selfie_set['x1'], \
                                                      selfie_set['x0']
 
         optimizer.zero_grad()
+        for feature in tensor_feature:
+            with torch.no_grad():
+                doc_x1, doc_x2, doc_x3, doc_x0 = Variable(feature['x0']), Variable(feature['x1']), \
+                                                 Variable(feature['x1']), Variable(feature['x0'])
+                selfie_x1, selfie_x2, selfie_x3, selfie_x0 = Variable(selfie_x1), Variable(selfie_x2), Variable(
+                    selfie_x3), Variable(selfie_x0)
+                output, dict_dist = model(doc_x1, doc_x2, doc_x3, doc_x0, selfie_x1, selfie_x2, selfie_x3, selfie_x0)
 
-        with torch.no_grad():
-            doc_x1, doc_x2, doc_x3, doc_x0 = Variable(doc_x1), Variable(doc_x2), Variable(doc_x3), Variable(doc_x0)
-            selfie_x1, selfie_x2, selfie_x3, selfie_x0 = Variable(selfie_x1), Variable(selfie_x2), Variable(
-                selfie_x3), Variable(selfie_x0)
-            output, dict_dist = model(doc_x1, doc_x2, doc_x3, doc_x0, selfie_x1, selfie_x2, selfie_x3, selfie_x0)
+            output = output.detach().cpu().numpy().squeeze()
 
-        output = output.detach().cpu().numpy().squeeze()
-
-        preds = np.where(output <= threshold, 0, 1)
-
-        return output, preds
+            preds = np.where(output <= threshold, 0, 1)
+            if output <= threshold:
+                return output, feature['emp_code']
