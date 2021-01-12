@@ -24,7 +24,6 @@ import torch.optim as optim
 
 import numpy as np
 
-
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("/Users/bao.tran/Downloads/3/shape_predictor_68_face_landmarks.dat")
 fa = FaceAligner(predictor, desiredFaceWidth=256)
@@ -153,10 +152,7 @@ def compare_face(selfie, tensor_feature, threshold=0.4):
     model.load_state_dict(checkpoint['state_dict'])
     model.eval()
     for batch_idx, batch_X in enumerate(data_loader_valid):
-        # doc_set = batch_X['doc']
         selfie_set = batch_X['selfie']
-
-        # doc_x1, doc_x2, doc_x3, doc_x0 = doc_set['x1'], doc_set['x2'], doc_set['x3'], doc_set['x0']
         selfie_x1, selfie_x2, selfie_x3, selfie_x0 = selfie_set['x0'], selfie_set['x1'], selfie_set['x1'], \
                                                      selfie_set['x0']
 
@@ -171,6 +167,5 @@ def compare_face(selfie, tensor_feature, threshold=0.4):
 
             output = output.detach().cpu().numpy().squeeze()
 
-            preds = np.where(output <= threshold, 0, 1)
             if output <= threshold:
                 return output, feature['emp_code']
