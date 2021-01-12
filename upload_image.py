@@ -5,16 +5,31 @@ from torch.utils.data import DataLoader
 from config import *
 
 
-def saveFeatures(p_data_loader, p_id):
+def saveFeatures(p_data_loader, p_id, tensor_feature):
+    emp_feature = {'emp_code': p_id}
     cuda = torch.cuda.is_available()
     for batch_idx, batch_X in enumerate(p_data_loader):
         selfie_set = batch_X['selfie']
         if cuda:
             for k, v in selfie_set.items():
                 torch.save(v.cuda(), os.path.join(feature_storage, p_id + '_{}.tf'.format(k)))
+                emp_feature.update({k: v.cuda()})
         else:
             for k, v in selfie_set.items():
                 torch.save(v, os.path.join(feature_storage, p_id + '_{}.tf'.format(k)))
+                emp_feature.update({k: v})
+    tensor_feature.append(emp_feature)
+
+
+def lookUpParrentFeature(tensor_feature, emp_code, feature_id, feature):
+    for x in range(0, len(tensor_feature)):
+        if tensor_feature[x].get('emp_code') == emp_code:
+            tensor_feature[x][feature_id] = feature
+            return tensor_feature
+    new_emp_code = {'emp_code': emp_code,
+                    feature_id: feature}
+    tensor_feature.append(new_emp_code)
+    return tensor_feature
 
 
 def loadFeatures(p_user_id=''):
@@ -25,17 +40,14 @@ def loadFeatures(p_user_id=''):
         path_file = os.path.join(feature_storage, f)
         # with open(os.path.join(feature_storage, f), 'rb') as file:
         #     buffer = io.BytesIO(file.read())
-        emp_code = f.split('_')[0]
-        emp_feature = {
-            'emp_code': emp_code,
-            'emp_feature': torch.load(path_file)
-        }
-        tensor_features.append(emp_feature)
+        emp_code = f.split('_')[0] + '_' + f.split('_')[1]
+        feature_id = f.split('_')[2].split('.')[0]
+        lookUpParrentFeature(tensor_features, emp_code, feature_id, torch.load(path_file))
         # tensor_features[f.split('_')[1].split('.')[0]] = torch.load(path_file)
     return tensor_features
 
 
-def extract_feature(doc, id_file, user_id):
+def extract_feature(doc, id_file, user_id, tensor_feature):
     v_img_root = "dataset"
     params = {'lr': 0.001,
               'momentum': 0.9,
@@ -83,5 +95,4 @@ def extract_feature(doc, id_file, user_id):
     valid = clsMultiScaleDataLoaderCustom(selfie=doc, img_root=v_img_root, transform=transform_valid)
     data_loader_valid = DataLoader(valid, batch_size=params['batch_size'], shuffle=params['shuffle'],
                                    num_workers=params['num_workers'], pin_memory=True, )
-    saveFeatures(data_loader_valid, user_id + '_' + id_file)
-
+    saveFeatures(data_loader_valid, user_id + '_' + id_file, tensor_feature)

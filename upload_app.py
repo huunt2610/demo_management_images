@@ -3,7 +3,6 @@ from flask import Flask, flash, request, redirect, render_template
 from config import *
 import upload_image
 import os
-import datetime
 
 app = Flask(__name__,
             static_url_path='',  # removes path prefix requirement */templates/static
@@ -12,6 +11,7 @@ app = Flask(__name__,
             )
 app.secret_key = app_key
 app.config['MAX_CONTENT_LENGTH'] = file_mb_max * 1024 * 1024
+tensor_feature = upload_image.loadFeatures()
 
 
 # Check that the upload folder exists
@@ -71,8 +71,9 @@ def upload_file():
                 else:
                     filename = "%s_%s.%s" % (emp_code, id_file, file.filename.split(".")[-1])
                 file.save(os.path.join(upload_dest, filename))
-                path= os.path.join(upload_dest, filename)
-                upload_image.extract_feature(path,  id_file, emp_code)
+                path = os.path.join(upload_dest, filename)
+                upload_image.extract_feature(path, id_file, emp_code, tensor_feature)
+                print(tensor_feature)
             else:
                 print('Not allowed', file)
 

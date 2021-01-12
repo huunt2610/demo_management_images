@@ -75,7 +75,7 @@ def face_alignment(input_file, output_face_file, is_selfie):
     return bResult
 
 
-def compare_face(doc, selfie, threshold=0.4):
+def compare_face(doc, selfie, tensor_feature,threshold=0.4):
     v_img_root = "dataset"
     v_model_file = "/Users/bao.tran/Downloads/3/facematch_svm_epoch_15_0.9575792247416961_2020_01_31_12_57_53.pth"
 
