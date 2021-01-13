@@ -4,6 +4,8 @@ from torchvision import transforms as tfs
 from torch.utils.data import DataLoader
 from config import *
 from model import main
+from model.facenet import clsTFBaseModel, clsMultiScalePairNetsSVM
+from facenet_pytorch import InceptionResnetV1
 
 
 def saveFeatures(p_data_loader, p_id, tensor_feature):
@@ -98,7 +100,25 @@ def extract_feature(doc, id_file, user_id, tensor_feature):
                                    num_workers=params['num_workers'], pin_memory=True, )
     saveFeatures(data_loader_valid, user_id + '_' + id_file, tensor_feature)
 
+
 tensor_features = loadFeatures()
 from datetime import datetime
+
 now = datetime.now()
-print(main.compare_face(selfie='/Users/bao.tran/Downloads/3/Image99.png', tensor_feature=tensor_features))
+basemodel_doc = InceptionResnetV1(pretrained='vggface2')
+
+basemodel_selfie = InceptionResnetV1(pretrained='vggface2')
+
+basenet_doc = clsTFBaseModel(basemodel_doc, num_removed_layers=0, freezed_layers=-1)
+
+basenet_selfie = clsTFBaseModel(basemodel_selfie, num_removed_layers=0, freezed_layers=-1)
+
+model = clsMultiScalePairNetsSVM(basenet_selfie, basenet_doc)  # clsMultiScaleNet(basenet)
+v_model_file = "/Users/bao.tran/Downloads/3/facematch_svm_epoch_15_0.9575792247416961_2020_01_31_12_57_53.pth"
+checkpoint = torch.load(v_model_file, map_location=torch.device('cpu'))
+
+model.load_state_dict(checkpoint['state_dict'])
+model.eval()
+now = datetime.now()
+print(main.compare_face(selfie='/Users/bao.tran/Downloads/3/Image99.png', tensor_feature=tensor_features, model=model))
+print(datetime.now() - now)

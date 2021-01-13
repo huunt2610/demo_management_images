@@ -73,7 +73,6 @@ def upload_file():
                 file.save(os.path.join(upload_dest, filename))
                 path = os.path.join(upload_dest, filename)
                 upload_image.extract_feature(path, id_file, emp_code, tensor_feature)
-                print(tensor_feature)
             else:
                 print('Not allowed', file)
 

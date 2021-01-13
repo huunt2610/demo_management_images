@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import torch
 import torch.nn as nn
 import os
 import pandas as pd
@@ -57,10 +56,8 @@ class clsMultiScaleDataLoader(Dataset):
             self.dataset = pd.read_csv(datafile, sep=',')
         else:
             print('File %s is not existed' % (datafile))
-            # raise 'Error Files'
 
     def __getitem__(self, index):
-        # doc = Image.open(self.dataset.iloc[index, 1])
         selfie = Image.open(self.dataset.iloc[index, 0])
         target = self.dataset.iloc[index, 2]
 
@@ -69,11 +66,6 @@ class clsMultiScaleDataLoader(Dataset):
             transform_f1 = self.transform_set['scale_f1']
             transform_f2 = self.transform_set['scale_f2']
             transform_f3 = self.transform_set['scale_f3']
-            # doc_X = {'x1': transform_f1(doc),
-            #          'x2': transform_f2(doc),
-            #          'x3': transform_f3(doc),
-            #          'x0': transform_f0(doc)
-            #          }
             selfie_X = {'x1': transform_f1(selfie),
                         'x2': transform_f2(selfie),
                         'x3': transform_f3(selfie),
@@ -81,7 +73,6 @@ class clsMultiScaleDataLoader(Dataset):
                         }
 
         local_X = {
-            # 'doc': doc_X,
                    'selfie': selfie_X,
                    'target': target,
                    'ori_doc': self.dataset.iloc[index, 1],
@@ -106,11 +97,7 @@ class clsMultiScaleDataLoaderCustom(Dataset):
         if self.transform_set:
             transform_f0 = self.transform_set['scale_f0']
             transform_f1 = self.transform_set['scale_f1']
-            # transform_f2 = self.transform_set['scale_f2']
-            # transform_f3 = self.transform_set['scale_f3']
             selfie_X = {'x1': transform_f1(selfie),
-                        # 'x2': transform_f2(selfie),
-                        # 'x3': transform_f3(selfie),
                         'x0': transform_f0(selfie)
                         }
 
