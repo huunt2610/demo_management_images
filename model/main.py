@@ -9,6 +9,8 @@ import dlib
 import torch
 from torch.autograd import Variable
 from torchvision import transforms as tfs
+import uuid
+
 sys.path.append(os.getcwd())
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("/Users/bao.tran/Downloads/3/shape_predictor_68_face_landmarks.dat")
@@ -16,48 +18,36 @@ fa = FaceAligner(predictor, desiredFaceWidth=256)
 mtcnn = MTCNN()
 
 
-def face_alignment(input_file, output_face_file, is_selfie):
-    bResult = 1
+def face_alignment(input_file, outputs_path):
+    output_face_file = outputs_path + str(uuid.uuid4()) + '.jpg'
     tmp = 'tmp_image.jpg'
     try:
+        image = cv2.imread(input_file)
+        image = imutils.resize(image, width=800, height=800)
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        rects = detector(gray, 1)
+        for rect in rects:
+            # extract the ROI of the *original* face, then align the face
+            # using facial landmarks
+            try:
+                # (x, y, w, h) = rect_to_bb(rect)
+                # faceOrig = imutils.resize(image[y:y + h, x:x + w], width=256)
 
-        if is_selfie:
-            # Face alignment
-            image = cv2.imread(input_file)
-            image = imutils.resize(image, width=800, height=800)
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            rects = detector(gray, 1)
-            for rect in rects:
-                # extract the ROI of the *original* face, then align the faces
-                # using facial landmarks
-                try:
-                    (x, y, w, h) = rect_to_bb(rect)
-                    # faceOrig = imutils.resize(image[y:y + h, x:x + w], width=256)
+                faceAligned = fa.align(image, gray, rect)
+                # print(faceAligned)
+                # im = Image.fromarray(np.uint8(faceAligned)*255)
+                cv2.imwrite(tmp, faceAligned)
 
-                    faceAligned = fa.align(image, gray, rect)
-                    # print(faceAligned)
-                    # im = Image.fromarray(np.uint8(faceAligned)*255)
-                    cv2.imwrite(tmp, faceAligned)
-
-                    img = Image.open(tmp)
-                    # detect again
-                    _, _ = mtcnn(img, save_path=output_face_file, return_prob=True)
-
-                    # print("SAVE")
-                except:
-                    bResult = 0
-                    print("Cannot save the aligned image from selfie")
-                    continue
-        else:
-            img = Image.open(input_file)
-            # detect again
-            _, _ = mtcnn(img, save_path=output_face_file, return_prob=True)
+                img = Image.open(tmp)
+                # detect again
+                x, y = mtcnn(img, save_path=output_face_file, return_prob=True)
+            except:
+                img = Image.open(input_file)
+                _, _ = mtcnn(img, save_path=output_face_file, return_prob=True)
 
     except:
-        bResult = 0
-        print("Cannot save the aligned image (%s) from selfie (%d) (%s)" % (output_face_file, is_selfie, input_file))
-
-    return bResult
+        print("not detect face")
+    return output_face_file
 
 
 mean_norm = [0.485, 0.456, 0.406]
@@ -78,25 +68,39 @@ transform_valid = {
          tfs.ToTensor(),  # normalized to [0,1]
          tfs.Normalize(mean=mean_norm, std=std_norm)  # Imagenet standards
          ]
+    ),
+    'scale_f2': tfs.Compose(
+        [tfs.Resize(size=resolution[1]),
+         tfs.ToTensor(),  # normalized to [0,1]
+         tfs.Normalize(mean=mean_norm, std=std_norm)  # Imagenet standards
+         ]
+    ),
+    'scale_f3': tfs.Compose(
+        [tfs.Resize(size=resolution[2]),
+         tfs.ToTensor(),  # normalized to [0,1]
+         tfs.Normalize(mean=mean_norm, std=std_norm)  # Imagenet standards
+         ]
     )
 }
 
 
-def compare_face(selfie, tensor_feature, model, threshold=0.35, threshhold_2=0.55):
-    image = Image.open(selfie)
+def compare_face(selfie, tensor_feature, model, threshold=0.6, threshhold_2=0.55):
+    new_path = face_alignment(selfie, 'outputs/')
+    image = Image.open(new_path)
     selfie_x0 = transform_valid['scale_f0'](image).unsqueeze_(0)
     selfie_x1 = transform_valid['scale_f1'](image).unsqueeze_(0)
+    selfie_x2 = transform_valid['scale_f2'](image).unsqueeze_(0)
+    selfie_x3 = transform_valid['scale_f3'](image).unsqueeze_(0)
     output_value = 1
     emp_code = None
     for feature in tensor_feature:
         with torch.no_grad():
-            doc_x1, doc_x0 = Variable(feature['x0']), Variable(feature['x1']),  # \
-            selfie_x1, selfie_x0 = Variable(selfie_x1), Variable(selfie_x0)
+            doc_x0, doc_x1, doc_x2, doc_x3 = Variable(feature['x0']), Variable(feature['x1']), Variable(
+                feature['x2']), Variable(feature['x3'])
+            selfie_x0, selfie_x1, selfie_x2, selfie_x3 = Variable(selfie_x0), Variable(selfie_x1), Variable(
+                selfie_x2), Variable(selfie_x3)
             output, dict_dist = model(doc_x1, doc_x0, doc_x1, doc_x0, selfie_x1, selfie_x0, selfie_x1, selfie_x0)
         output = output.detach().cpu().numpy().squeeze()
         if output <= threshold:
             return output, feature['emp_code']
-        elif output <= threshhold_2 and output < output_value:
-            emp_code = feature['emp_code']
-            output_value = output
     return output_value, emp_code

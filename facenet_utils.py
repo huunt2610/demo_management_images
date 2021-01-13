@@ -95,9 +95,13 @@ class clsMultiScaleDataLoaderCustom(Dataset):
         selfie = Image.open(self.selfie)
         selfie_X = {}
         if self.transform_set:
-            transform_f0 = self.transform_set['scale_f0']
-            transform_f1 = self.transform_set['scale_f1']
+            transform_f0 = self.transform_set['scale_f1']
+            transform_f1 = self.transform_set['scale_f2']
+            transform_f2 = self.transform_set['scale_f3']
+            transform_f3 = self.transform_set['scale_f0']
             selfie_X = {'x1': transform_f1(selfie),
+                        'x2': transform_f2(selfie),
+                        'x3': transform_f3(selfie),
                         'x0': transform_f0(selfie)
                         }
 

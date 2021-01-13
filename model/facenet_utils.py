@@ -69,11 +69,6 @@ class clsMultiScaleDataLoader(Dataset):
             transform_f1 = self.transform_set['scale_f1']
             transform_f2 = self.transform_set['scale_f2']
             transform_f3 = self.transform_set['scale_f3']
-            # doc_X = {'x1': transform_f1(doc),
-            #          'x2': transform_f2(doc),
-            #          'x3': transform_f3(doc),
-            #          'x0': transform_f0(doc)
-            #          }
             selfie_X = {'x1': transform_f1(selfie),
                         'x2': transform_f2(selfie),
                         'x3': transform_f3(selfie),

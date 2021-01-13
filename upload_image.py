@@ -7,6 +7,7 @@ from model import main
 from model.facenet import clsTFBaseModel, clsMultiScalePairNetsSVM
 from facenet_pytorch import InceptionResnetV1
 from datetime import datetime
+from model.main import face_alignment
 
 
 def saveFeatures(p_data_loader, p_id, tensor_feature):
@@ -82,9 +83,26 @@ def extract_feature(doc, id_file, user_id, tensor_feature):
              tfs.ToTensor(),  # normalized to [0,1]
              tfs.Normalize(mean=mean_norm, std=std_norm)  # Imagenet standards
              ]
+        ),
+        'scale_f2': tfs.Compose(
+            [tfs.Resize(size=resolution[1]),
+             # tfs.CenterCrop(size=224), #resize as vgg16's input shape
+             tfs.ToTensor(),  # normalized to [0,1]
+             tfs.Normalize(mean=mean_norm, std=std_norm)  # Imagenet standards
+             # tfs.Normalize((0.1307,), (0.3081,))
+             ]
+        ),
+        'scale_f3': tfs.Compose(
+            [tfs.Resize(size=resolution[2]),
+             # tfs.CenterCrop(size=224), #resize as vgg16's input shape
+             tfs.ToTensor(),  # normalized to [0,1]
+             tfs.Normalize(mean=mean_norm, std=std_norm)  # Imagenet standards
+             # tfs.Normalize((0.1307,), (0.3081,))
+             ]
         )
     }
-    valid = clsMultiScaleDataLoaderCustom(selfie=doc, img_root=v_img_root, transform=transform_valid)
+    new_path = face_alignment(doc, 'model/uploads/')
+    valid = clsMultiScaleDataLoaderCustom(selfie=new_path, img_root=v_img_root, transform=transform_valid)
     data_loader_valid = DataLoader(valid, batch_size=params['batch_size'], shuffle=params['shuffle'],
                                    num_workers=params['num_workers'], pin_memory=True, )
     saveFeatures(data_loader_valid, user_id + '_' + id_file, tensor_feature)
@@ -102,15 +120,14 @@ def loadModel(model_path):
     model = clsMultiScalePairNetsSVM(basenet_selfie, basenet_doc)  # clsMultiScaleNet(basenet)
     v_model_file = model_path
     checkpoint = torch.load(v_model_file, map_location=torch.device('cpu'))
-
     model.load_state_dict(checkpoint['state_dict'])
     model.eval()
     return model
-
-
-path = "/Users/bao.tran/Downloads/3/facematch_svm_epoch_15_0.9575792247416961_2020_01_31_12_57_53.pth"
-model = loadModel(path)
-tensor_features = loadFeatures()
-now = datetime.now()
-print(main.compare_face(selfie='/Users/bao.tran/Downloads/3/Image99.png', tensor_feature=tensor_features, model=model))
-print(datetime.now() - now)
+#
+#
+# path = "/Users/bao.tran/Downloads/3/facematch_svm_epoch_15_0.9575792247416961_2020_01_31_12_57_53.pth"
+# model = loadModel(path)
+# tensor_features = loadFeatures()
+# now = datetime.now()
+# print(main.compare_face(selfie='/Users/bao.tran/Downloads/20210113155319.jpg', tensor_feature=tensor_features, model=model))
+# print(datetime.now() - now)
