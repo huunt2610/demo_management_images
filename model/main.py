@@ -26,6 +26,8 @@ def face_alignment(input_file, outputs_path):
         image = imutils.resize(image, width=800, height=800)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         rects = detector(gray, 1)
+        if len(rects) == 0:
+            return None
         for rect in rects:
             # extract the ROI of the *original* face, then align the face
             # using facial landmarks
@@ -47,6 +49,7 @@ def face_alignment(input_file, outputs_path):
 
     except:
         print("not detect face")
+        return None
     return output_face_file
 
 
@@ -86,6 +89,8 @@ transform_valid = {
 
 def compare_face(selfie, tensor_feature, model, threshold=0.6, threshhold_2=0.55):
     new_path = face_alignment(selfie, 'outputs/')
+    if new_path is None:
+        return 1, 'can_not_detect_face'
     image = Image.open(new_path)
     selfie_x0 = transform_valid['scale_f0'](image).unsqueeze_(0)
     selfie_x1 = transform_valid['scale_f1'](image).unsqueeze_(0)
