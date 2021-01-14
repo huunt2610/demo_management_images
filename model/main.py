@@ -20,32 +20,9 @@ mtcnn = MTCNN()
 
 def face_alignment(input_file, outputs_path):
     output_face_file = outputs_path + str(uuid.uuid4()) + '.jpg'
-    tmp = 'tmp_image.jpg'
     try:
-        image = cv2.imread(input_file)
-        image = imutils.resize(image, width=800, height=800)
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        rects = detector(gray, 1)
-        if len(rects) == 0:
-            return None
-        for rect in rects:
-            # extract the ROI of the *original* face, then align the face
-            # using facial landmarks
-            try:
-                # (x, y, w, h) = rect_to_bb(rect)
-                # faceOrig = imutils.resize(image[y:y + h, x:x + w], width=256)
-
-                faceAligned = fa.align(image, gray, rect)
-                # print(faceAligned)
-                # im = Image.fromarray(np.uint8(faceAligned)*255)
-                cv2.imwrite(tmp, faceAligned)
-
-                img = Image.open(tmp)
-                # detect again
-                x, y = mtcnn(img, save_path=output_face_file, return_prob=True)
-            except:
-                img = Image.open(input_file)
-                _, _ = mtcnn(img, save_path=output_face_file, return_prob=True)
+        img = Image.open(input_file)
+        _, _ = mtcnn(img, save_path=output_face_file, return_prob=True)
 
     except:
         print("not detect face")
